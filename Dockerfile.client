@@ -1,0 +1,32 @@
+# Dockerfile.client
+FROM ubuntu:latest
+
+# Установка необходимых инструментов
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    wget \
+    libtool \
+    autoconf \
+    pkg-config \
+    libpqxx-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Сборка и установка последней версии libmodbus
+RUN git clone https://github.com/stephane/libmodbus.git && \
+    cd libmodbus && \
+    ./autogen.sh && \
+    ./configure && \
+    make && \
+    make install && \
+    ldconfig && \
+    cd .. && rm -rf libmodbus
+
+# Копируем исходный код
+COPY main.cpp main.cpp
+
+# Компилируем
+RUN g++ -o start main.cpp -lmodbus -lpqxx -lpq
+
+# Даем серверу время для запуска
+CMD sleep 7 && ./start
